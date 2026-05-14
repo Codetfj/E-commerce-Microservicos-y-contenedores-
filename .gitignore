@@ -19,10 +19,28 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# virtual machine crash logs
 hs_err_pid*
 replay_pid*
 
 # Claude Code
 .claude/
 CLAUDE.md
+
+
+
+mysql-data/
+mysql-quarkus-ecommerce/mysql-data/
+
+# Archivos de sockets y bloqueos de base de datos
+*.sock
+*.lock
+
+target/
+.quarkus/
+.mvn/wrapper/maven-wrapper.jar
+
+
+.idea/
+.vscode/
+*.swp
