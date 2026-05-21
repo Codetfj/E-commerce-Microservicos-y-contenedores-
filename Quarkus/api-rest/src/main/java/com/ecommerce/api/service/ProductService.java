@@ -1,59 +1,69 @@
 package com.ecommerce.api.service;
 
+import com.ecommerce.api.entity.ProductoEntity;
 import com.ecommerce.api.model.Products;
 import com.ecommerce.api.model.ProductUpdate;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
+@Transactional
 public class ProductService {
 
     public List<Products> getAllProducts() {
-        List<Products> products = new ArrayList<>();
-
-        Products p1 = new Products();
-        p1.setId(1);
-        p1.setName("Mochila");
-        p1.setDescription("Mochila Negra");
-        p1.setPrice(1250.50f);
-        p1.setStock(25);
-
-        Products p2 = new Products();
-        p2.setId(2);
-        p2.setName("Laptop");
-        p2.setDescription("Laptop 15 pulgadas");
-        p2.setPrice(15999.99f);
-        p2.setStock(10);
-
-        products.add(p1);
-        products.add(p2);
-
-        return products;
+        return ProductoEntity.<ProductoEntity>listAll()
+                .stream().map(this::toModel).collect(Collectors.toList());
     }
 
     public Products createProduct(Products product) {
-        Products response = new Products();
-        response.setId((int) (System.currentTimeMillis() % 100000));
-        response.setName(product.getName());
-        response.setDescription(product.getDescription());
-        response.setPrice(product.getPrice());
-        response.setStock(product.getStock());
+        ProductoEntity entity = new ProductoEntity();
+        entity.nombre     = product.getName();
+        entity.descripcion = product.getDescription();
+        entity.precio     = product.getPrice() != null
+                ? new BigDecimal(product.getPrice().toString()) : BigDecimal.ZERO;
+        entity.stock      = product.getStock() != null ? product.getStock() : 0;
+        entity.persist();
+        return toModel(entity);
+    }
 
-        return response;
+    public Products getProductById(Integer id) {
+        ProductoEntity entity = ProductoEntity.findById(id.longValue());
+        if (entity == null)
+            throw new WebApplicationException(
+                Response.status(404).entity("Producto no encontrado").build());
+        return toModel(entity);
     }
 
     public Products updateProduct(Integer id, ProductUpdate update) {
-        Products response = new Products();
-        response.setId(id);
-        response.setName(update.getName() != null ? update.getName() : "Producto de Ejemplo");
-        response.setPrice(update.getPrice() != null ? update.getPrice().floatValue() : 99.99f);
-        response.setStock(update.getStock() != null ? update.getStock() : 10);
-
-        return response;
+        ProductoEntity entity = ProductoEntity.findById(id.longValue());
+        if (entity == null)
+            throw new WebApplicationException(
+                Response.status(404).entity("Producto no encontrado").build());
+        if (update.getName() != null)  entity.nombre = update.getName();
+        if (update.getPrice() != null) entity.precio = update.getPrice();
+        if (update.getStock() != null) entity.stock  = update.getStock();
+        return toModel(entity);
     }
 
     public void deleteProduct(Integer id) {
-        // sin persistencia aún — lógica de eliminación pendiente de BD
+        boolean deleted = ProductoEntity.deleteById(id.longValue());
+        if (!deleted)
+            throw new WebApplicationException(
+                Response.status(404).entity("Producto no encontrado").build());
+    }
+
+    private Products toModel(ProductoEntity e) {
+        Products p = new Products();
+        p.setId(e.idProducto.intValue());
+        p.setName(e.nombre);
+        p.setDescription(e.descripcion);
+        p.setPrice(e.precio != null ? e.precio.floatValue() : 0f);
+        p.setStock(e.stock);
+        return p;
     }
 }

@@ -8,7 +8,7 @@
  
     <properties>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -61,6 +61,16 @@
             <version>2.2.19</version>
         </dependency>
  
+        <!-- Base de datos: MySQL + Hibernate ORM -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-mysql</artifactId>
+        </dependency>
+
         <!-- Observabilidad: health checks y métricas -->
         <dependency>
             <groupId>io.quarkus</groupId>

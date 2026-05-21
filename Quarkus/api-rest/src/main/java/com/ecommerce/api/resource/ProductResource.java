@@ -32,6 +32,13 @@ public class ProductResource {
         return Response.ok(products).build();
     }
 
+    @GET
+    @Path("/products/{id}")
+    public Response getProductById(@PathParam("id") Integer id) {
+        Products product = productService.getProductById(id);
+        return Response.ok(product).build();
+    }
+
     @POST
     @Path("/products")
     public Response createProduct(@Valid Products productRequest) {

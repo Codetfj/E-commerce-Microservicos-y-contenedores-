@@ -1,0 +1,148 @@
+================================================================
+  NOTAS LOCALES — E-Commerce Microservices
+  (Este archivo no se sube a GitHub)
+================================================================
+
+----------------------------------------------------------------
+  ESTRUCTURA DEL PROYECTO
+----------------------------------------------------------------
+
+E-commerce-Microservicos/
+├── Quarkus/
+│   └── api-rest/                        <- API REST principal (Quarkus 3.33.1, Java 25)
+│       ├── pom.xml                      <- Dependencias Maven
+│       └── src/main/
+│           ├── java/com/ecommerce/api/
+│           │   ├── model/               <- POJOs del OAS (Cart, Order, Payment, Product, Users...)
+│           │   ├── resource/            <- Endpoints REST (CartResource, OrderResource, etc.)
+│           │   └── service/             <- Lógica de negocio (CartService, OrderService, etc.)
+│           └── resources/
+│               ├── application.properties   <- Configuración Quarkus + MySQL
+│               └── api/oas-e-commerce-v1.yaml
+├── services/
+│   └── auth-service/                    <- Servicio de autenticación (pendiente)
+├── init-scripts/
+│   └── 01-create-tables.sql             <- Script SQL que se ejecuta al iniciar MySQL
+├── docs/
+│   ├── arquitectura.md
+│   ├── api.md
+│   └── base-datos.md
+├── mysql-data/                          <- Datos persistentes de MySQL (bind mount, no subir)
+├── docker-compose.yml                   <- MySQL con bind mount (desarrollo)
+├── docker-compose-volumes.yml           <- MySQL con named volumes (producción)
+└── NOTAS_LOCALES.txt                    <- Este archivo
+
+----------------------------------------------------------------
+  TABLAS EN BASE DE DATOS (ecommerce_db)
+----------------------------------------------------------------
+
+  usuarios         -> id_user, nombre, correo, contrasena, direccion
+  productos        -> id_producto, nombre, descripcion, precio, stock
+  carrito          -> id_carrito, id_user, id_producto, cantidad, total
+  pedidos          -> id_pedido, id_user, estado_pedido, fecha
+  detalles_pedido  -> id_detalle, id_pedido, id_producto, cantidad, precio_total
+  pagos            -> id_pago, id_pedido, metodo_pago, estado
+  hibernate_sequence -> next_val  (requerida por Hibernate para IDs)
+
+----------------------------------------------------------------
+  CREDENCIALES MySQL
+----------------------------------------------------------------
+
+  Host:            localhost
+  Puerto:          3306
+  Base de datos:   ecommerce_db
+  Usuario app:     ecommerce_user
+  Contraseña app:  ecommerce_password
+  Usuario root:    root
+  Contraseña root: root_password
+  JDBC URL:        jdbc:mysql://localhost:3306/ecommerce_db
+
+----------------------------------------------------------------
+  PASOS PARA LEVANTAR EL PROYECTO
+----------------------------------------------------------------
+
+  1. Iniciar contenedor MySQL:
+     cd /home/celestial/Documents/E-commerce-Microservicos
+     docker compose up -d
+
+  2. Verificar que MySQL está corriendo:
+     docker ps
+
+  3. Levantar Quarkus en modo desarrollo:
+     cd Quarkus/api-rest
+     ./mvnw quarkus:dev
+
+  4. La API estará disponible en:
+     http://localhost:8080
+     http://localhost:8080/q/health       <- Health check
+     http://localhost:8080/q/swagger-ui   <- Swagger UI
+     http://localhost:8080/metrics        <- Métricas Prometheus
+
+  5. Para detener todo:
+     Ctrl+C  (detiene Quarkus)
+     docker compose down  (detiene MySQL)
+
+  Para usar named volumes en lugar de bind mount:
+     docker compose -f docker-compose-volumes.yml up -d
+
+----------------------------------------------------------------
+  COMANDOS DOCKER ÚTILES
+----------------------------------------------------------------
+
+  -- Ver contenedores activos --
+  docker ps
+  docker ps -a                            <- incluye detenidos
+
+  -- Logs del contenedor MySQL --
+  docker logs mysql-ecommerce             <- logs completos
+  docker logs -f mysql-ecommerce          <- logs en tiempo real
+
+  -- Conectarse a MySQL desde terminal --
+  docker exec -it mysql-ecommerce mysql -u ecommerce_user -pecommerce_password ecommerce_db
+  docker exec -it mysql-ecommerce mysql -u root -proot_password
+
+  -- Ver tablas y datos --
+  SHOW TABLES;
+  SELECT * FROM usuarios;
+  SELECT * FROM productos;
+  SELECT * FROM pedidos;
+
+  -- Inspeccionar el contenedor --
+  docker inspect mysql-ecommerce
+
+  -- Ver uso de recursos --
+  docker stats mysql-ecommerce
+
+  -- Detener / iniciar / reiniciar --
+  docker stop mysql-ecommerce
+  docker start mysql-ecommerce
+  docker restart mysql-ecommerce
+
+  -- Eliminar contenedor (los datos en mysql-data/ se conservan) --
+  docker compose down
+  docker compose down -v                  <- también elimina volúmenes
+
+  -- Ver redes Docker --
+  docker network ls
+  docker network inspect e-commerce-microservicos_ecommerce-network
+
+  -- Ver volúmenes --
+  docker volume ls
+  docker volume inspect e-commerce-microservicos_mysql-data
+
+  -- Backup de la base de datos --
+  docker exec mysql-ecommerce mysqldump -u ecommerce_user -pecommerce_password ecommerce_db > backup.sql
+
+  -- Restaurar backup --
+  docker exec -i mysql-ecommerce mysql -u ecommerce_user -pecommerce_password ecommerce_db < backup.sql
+
+----------------------------------------------------------------
+  LO QUE FALTA (pendiente)
+----------------------------------------------------------------
+
+  - Agregar @Entity a los modelos para mapeo JPA/Hibernate
+  - Implementar lógica real en los Services (actualmente vacíos)
+  - Configurar auth-service
+  - Agregar Quarkus al docker-compose para orquestar todo junto
+
+================================================================

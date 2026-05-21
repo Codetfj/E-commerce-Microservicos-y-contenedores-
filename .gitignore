@@ -27,6 +27,10 @@ replay_pid*
 .claude/
 CLAUDE.md
 
+# Archivos locales
+NOTAS_LOCALES.txt
+COMO_ARRANCAR.txt
+
 
 
 mysql-data/

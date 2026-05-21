@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-ecommerce-volumes
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ecommerce_db
+      MYSQL_USER: ecommerce_user
+      MYSQL_PASSWORD: ecommerce_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - ecommerce-network
+
+volumes:
+  mysql-data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
